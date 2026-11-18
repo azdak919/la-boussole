@@ -19,7 +19,7 @@ governance:
     - maelle@exemple.invalid
     - samir@exemple.invalid
 radio:
-  enabled: false
+  enabled: true
   station: chyz
   theme: dark
   position: top
