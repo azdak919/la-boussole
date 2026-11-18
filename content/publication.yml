@@ -19,7 +19,7 @@ governance:
     - maelle@exemple.invalid
     - samir@exemple.invalid
 radio:
-  enabled: true
+  enabled: false
   station: chyz
   theme: dark
   position: top
@@ -30,7 +30,7 @@ masthead:
   backgrounds:
     enabled: true
   weather:
-    enabled: false
+    enabled: true
     localities:
       - Trois-Rivières
   tools:
