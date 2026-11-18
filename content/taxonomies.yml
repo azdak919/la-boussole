@@ -1,26 +1,16 @@
 categories:
-  - name: "Vie étudiante"
-    slug: "vie-etudiante"
-  - name: "Culture"
-    slug: "culture"
-  - name: "Actualité locale"
-    slug: "actualite-locale"
-  - name: "Sports"
-    slug: "sports"
-  - name: "Opinion"
-    slug: "opinion"
+  - slug: arts-de-la-scene
+    name: Arts de la scène
+  - slug: environnement
+    name: Environnement
+    color: "#00796b"
 tags:
-  - name: "assemblée générale"
-    slug: "assemblee-generale"
-  - name: "financement"
-    slug: "financement"
-  - name: "radio étudiante"
-    slug: "radio-etudiante"
-  - name: "archives"
-    slug: "archives"
-  - name: "transition écologique"
-    slug: "transition-ecologique"
-  - name: "santé étudiante"
-    slug: "sante-etudiante"
-  - name: "soccer"
-    slug: "soccer"
+  - slug: volleyball
+    name: volleyball
+  - slug: theatre
+    name: théâtre
+  - slug: assemblee-generale
+    name: assemblée générale
+  - slug: transport
+    name: transport
+miroir: socle

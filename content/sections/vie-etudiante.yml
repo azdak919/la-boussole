@@ -1,4 +1,6 @@
-slug: "vie-etudiante"
-name: "Vie étudiante"
-description: "La vie au cégep, les associations et les comités"
+id: d60b93a9-5de1-430a-b687-7a893f979b4d
+name: Vie étudiante
+slug: vie-etudiante
 order: 1
+color: "#2e7d32"
+miroir: socle

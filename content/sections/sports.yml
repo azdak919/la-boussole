@@ -1,4 +1,6 @@
-slug: "sports"
-name: "Sports"
-description: "Les Faucons de Val-Fictif et le sport collégial"
+id: 26269786-5158-4c1a-b22d-42455f57dbac
+name: Sports
+slug: sports
 order: 2
+color: "#c62828"
+miroir: socle

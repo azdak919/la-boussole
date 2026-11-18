@@ -1,40 +1,49 @@
-# Valeurs produites par le configurateur KIOSQUE (packages/config-core).
-slug: "la-boussole"
-name: "La Boussole"
-tagline: "Journal fictif de test — aucun fait réel"
-institution: "Cégep de Val-Fictif"
-institutionType: "cegep"
-region: "Québec"
-lang: "fr-CA"
-# Qui publie : "Rédaction en chef"
-siteUrl: "https://azdak919.github.io/la-boussole/"
-timeZone: "America/Toronto"
+id: 97a27f41-d0fe-45ba-a6ca-220d78d2b41d
+slug: la-boussole
+name: La Boussole
+institution: Cégep de Val-Fictif
+institutionType: cegep
+lang: fr-CA
+siteUrl: https://azdak919.github.io/la-boussole/
+timeZone: America/Toronto
 theme:
   accent: "#0b5d6b"
-  accentDark: "#79a6ae"
-  typography: "modern-accessible"
+  accentDark: "#cf7ec1"
+  typography: modern-accessible
+governance:
+  owner: azdak919
+  stewardEntity: Cégep de Val-Fictif
+  contact: maelle@exemple.invalid
+  repo: https://github.com/azdak919/la-boussole
+  recoveryContacts:
+    - maelle@exemple.invalid
+    - samir@exemple.invalid
+radio:
+  enabled: true
+  station: chyz
+  theme: dark
+  position: top
+tagline: Journal fictif de test — aucun fait réel
+media:
+  autoStockPhoto: false
 masthead:
   backgrounds:
     enabled: true
-    images: []
   weather:
-    enabled: true
-    localities: ["Trois-Rivières"]
+    enabled: false
+    localities:
+      - Trois-Rivières
   tools:
     pomodoro: true
     solitaire: true
-radio:
-  enabled: true
-  station: "chyz"
-  theme: dark
-  position: top
+  overlayStrength: 0.55
+  textAlignment: left
+logo:
+  id: 375e320e-ed81-4498-8654-930c005bfda8
+  kind: image
+  src: data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgMTIwIiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkxhIEJvdXNzb2xlIj48Y2lyY2xlIGN4PSI2MCIgY3k9IjYwIiByPSI1NiIgZmlsbD0iIzBiNWQ2YiIvPjxjaXJjbGUgY3g9IjYwIiBjeT0iNjAiIHI9IjQ0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iNCIvPjxwb2x5Z29uIHBvaW50cz0iNjAsMTggNzAsNjAgNjAsMTAyIDUwLDYwIiBmaWxsPSIjZmZmIi8+PHBvbHlnb24gcG9pbnRzPSI2MCwxOCA3MCw2MCA1MCw2MCIgZmlsbD0iI2YyYjEzNCIvPjxjaXJjbGUgY3g9IjYwIiBjeT0iNjAiIHI9IjYiIGZpbGw9IiMwYjVkNmIiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+PHRleHQgeD0iNjAiIHk9IjE1IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMCIgZmlsbD0iI2ZmZiI+TjwvdGV4dD48L3N2Zz4=
+  alt: La Boussole, logo en forme de boussole
+  mime: image/svg+xml
+region: Québec
 founded: "2026"
-license: CC-BY-SA-4.0
-governance:
-  owner: "azdak919"
-  stewardEntity: "Cégep de Val-Fictif"
-  contact: "maelle@exemple.invalid"
-  repo: "https://github.com/azdak919/la-boussole"
-  recoveryContacts:
-    - "maelle@exemple.invalid"
-    - "samir@exemple.invalid"
+miroir: socle

@@ -1,4 +1,6 @@
-slug: "opinion"
-name: "Opinion"
-description: "Lettres et chroniques"
+id: b7c7d00f-f1a9-469b-817e-bb5b3b70f0eb
+name: Opinion
+slug: opinion
 order: 4
+color: "#ef6c00"
+miroir: socle

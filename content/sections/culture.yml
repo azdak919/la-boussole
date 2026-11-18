@@ -1,4 +1,6 @@
-slug: "culture"
-name: "Culture"
-description: "Spectacles, expos et création étudiante"
+id: cffa9e0b-fd71-4507-9df5-c2ec10f5ce5f
+name: Culture
+slug: culture
 order: 3
+color: "#6a1b9a"
+miroir: socle

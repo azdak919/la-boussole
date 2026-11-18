@@ -2,8 +2,8 @@ import type { KiosqueConfig } from './packages/pipeline/src/config.ts';
 
 const config: Partial<KiosqueConfig> = {
   // Hébergement : pages seules. L'adaptateur reste markdown.
-  source: { adapter: 'markdown', options: { root: new URL('.', import.meta.url).pathname } },
-  editorial: { mode: 'git-sveltia' },
+  source: { adapter: 'socle', options: { baseUrl: 'http://127.0.0.1:8787' } },
+  editorial: { mode: 'external' },
   deploy: {
     basePath: "/la-boussole",
   },

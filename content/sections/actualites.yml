@@ -1,4 +1,5 @@
-slug: "actualites"
-name: "Actualités"
-description: "Nouvelles du cégep et de la région"
+id: 2417b765-a0a5-4559-b342-1b0202fffd8b
+name: Actualités
+slug: actualites
 order: 5
+miroir: socle
