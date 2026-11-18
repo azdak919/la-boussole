@@ -1,0 +1,40 @@
+# Valeurs produites par le configurateur KIOSQUE (packages/config-core).
+slug: "la-boussole"
+name: "La Boussole"
+tagline: "Journal fictif de test — aucun fait réel"
+institution: "Cégep de Val-Fictif"
+institutionType: "cegep"
+region: "Québec"
+lang: "fr-CA"
+# Qui publie : "Rédaction en chef"
+siteUrl: "https://azdak919.github.io/la-boussole/"
+timeZone: "America/Toronto"
+theme:
+  accent: "#0b5d6b"
+  accentDark: "#79a6ae"
+  typography: "modern-accessible"
+masthead:
+  backgrounds:
+    enabled: true
+    images: []
+  weather:
+    enabled: true
+    localities: ["Trois-Rivières"]
+  tools:
+    pomodoro: true
+    solitaire: true
+radio:
+  enabled: true
+  station: "chyz"
+  theme: dark
+  position: top
+founded: "2026"
+license: CC-BY-SA-4.0
+governance:
+  owner: "azdak919"
+  stewardEntity: "Cégep de Val-Fictif"
+  contact: "maelle@exemple.invalid"
+  repo: "https://github.com/azdak919/la-boussole"
+  recoveryContacts:
+    - "maelle@exemple.invalid"
+    - "samir@exemple.invalid"

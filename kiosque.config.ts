@@ -1,13 +1,14 @@
 import type { KiosqueConfig } from './packages/pipeline/src/config.ts';
 
-/** Configuration de la vitrine amont et de sa démonstration Le Quorum. */
 const config: Partial<KiosqueConfig> = {
-  root: './examples/demo-journal',
-  source: { adapter: 'markdown' },
-  editorial: { mode: 'demo-local' },
-  deploy: { basePath: '/le-kiosque' },
-  demoNotice: 'Démonstration du Kiosque — journal étudiant fictif',
-  demoContent: true,
+  // Hébergement : pages seules. L'adaptateur reste markdown.
+  source: { adapter: 'markdown', options: { root: new URL('.', import.meta.url).pathname } },
+  editorial: { mode: 'git-sveltia' },
+  deploy: {
+    basePath: "/la-boussole",
+  },
+  demoNotice: 'Journal FICTIF de test — le Cégep de Val-Fictif et ses personnes n’existent pas',
+  demoContent: false,
   feedLimit: 30,
 };
 
