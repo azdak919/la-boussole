@@ -65,9 +65,14 @@ test('le workflow propose une pull request, sans force ni réécriture', () => {
   const wf = readFileSync('template/.github/workflows/maj-socle.yml', 'utf8');
   assert.match(wf, /workflow_dispatch:/);
   assert.match(wf, /node tools\/maj-socle\.mjs "\$CIBLE"/, 'le commit demandé passe par une variable, pas dans le script');
-  assert.match(wf, /gh pr create/);
+  assert.match(wf, /tools\/proposer-maj\.sh/);
   assert.doesNotMatch(wf, /--force|-f origin|gh pr merge/);
   assert.match(wf, /npm run kiosque -- build/, 'le journal doit se construire avant la proposition');
+  const proposer = readFileSync('tools/proposer-maj.sh', 'utf8');
+  assert.match(proposer, /gh pr create --repo "\$REPO"/, 'la PR vise le dépôt du journal, pas l’amont');
+  assert.match(proposer, /gh issue create --repo "\$REPO"/, 'si GitHub interdit la pull request, une issue donne le lien');
+  assert.match(proposer, /not permitted to create or approve pull requests/);
+  assert.match(proposer, /compare\/main\.\.\./);
 });
 
 test('la page Mise à jour montre le commit et le bouton qui propose la nouvelle version', () => {
