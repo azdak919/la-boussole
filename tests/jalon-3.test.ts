@@ -175,10 +175,14 @@ test('la vitrine expose le bandeau illustré, les outils et la composition magaz
 
 test('le déploiement et le configurateur du jalon 3 sont présents à la racine', async () => {
   const workflow = await readFile(path.join(ROOT, '.github/workflows/verification.yml'), 'utf8');
+  const publish = await readFile(path.join(ROOT, '.github/workflows/publier.yml'), 'utf8');
   const testAt = workflow.indexOf('npm test');
   const siteAt = workflow.indexOf('npm run site');
-  assert.ok(testAt >= 0 && siteAt > testAt, 'les tests doivent précéder le build Pages');
-  assert.match(workflow, /actions\/deploy-pages@v\d+/);
+  assert.ok(testAt >= 0 && siteAt > testAt, 'les tests unitaires précèdent le parcours navigateur');
+  assert.match(workflow, /npx playwright test/);
+  // La vitrine ne se déploie pas depuis ce journal : elle écraserait le site.
+  assert.doesNotMatch(workflow, /actions\/deploy-pages/);
+  assert.match(publish, /actions\/deploy-pages@v\d+/);
 
   const configurator = await readFile(path.join(ROOT, 'site/configurer/index.html'), 'utf8');
   assert.equal((configurator.match(/class="config-step"/g) ?? []).length, 4, "configurateur en 4 étapes (t344u)");

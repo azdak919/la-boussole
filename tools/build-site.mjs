@@ -119,12 +119,18 @@ const demoBundle = {
   })),
 };
 
+// La démo embarquée (dist/demo et /admin/) est toujours le miroir Markdown
+// local en sql.js. Un journal configuré met `editorial.mode` à `external` et
+// `demoContent` à false : en hériter, le build n'écrit pas seed.json, l'admin
+// ne montre jamais « Tableau de bord », et la vérification navigateur échoue.
 await build({
   config: {
     ...rootConfig,
     root: journalRoot,
-    source: rootConfig.source ?? { adapter: 'markdown' },
+    source: { adapter: 'markdown' },
     deploy: { ...rootConfig.deploy, basePath: demoBase },
+    editorial: { mode: 'demo-local' },
+    demoContent: true,
   },
   bundle: demoBundle,
   outDir: path.join(outDir, 'demo'),

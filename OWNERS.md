@@ -79,4 +79,6 @@ reprendra ne comprendra pas pourquoi les mises à jour créent des conflits.
 
 | Fichier | Pourquoi | Date |
 |---|---|---|
-| | | |
+| `.github/workflows/maj-plateforme.yml`, `maj-socle.yml`, `tools/proposer-maj.sh`, `tools/maj-plateforme.sh` | Le YAML de la mise à jour plateforme était invalide (le workflow tombait avant tout job) et GitHub refuse par défaut qu’Actions ouvre une pull request. Reprise du correctif amont : proposition par issue si la pull request est interdite, sans push forcé. | 2026-11-21 |
+| `tools/build-site.mjs` | La démo embarquée héritait de `editorial.mode: external` : pas de `seed.json`, l’admin ne démarrait pas. La démo reste en mode local. | 2026-11-21 |
+| `.github/workflows/verification.yml` | La vérification ne publie plus la vitrine (ça écrasait le journal). Elle ne fait que les tests. | 2026-11-21 |

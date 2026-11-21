@@ -30,10 +30,17 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write
+
+concurrency:
+  group: maj-plateforme
+  cancel-in-progress: false
 
 jobs:
   proposer:
+    if: github.repository != 'azdak919/le-kiosque'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -42,53 +49,82 @@ jobs:
       - name: Récupérer l'amont
         id: amont
         run: |
+          set -euo pipefail
           git remote add upstream https://github.com/azdak919/le-kiosque.git 2>/dev/null || true
-          git fetch upstream main
-          if git merge-base --is-ancestor upstream/main HEAD; then
-            echo "a_jour=true" >> "$GITHUB_OUTPUT"
-            echo "Déjà à jour — rien à proposer."
-          else
-            echo "a_jour=false" >> "$GITHUB_OUTPUT"
-            git log --oneline HEAD..upstream/main | head -30
-          fi
+          n=1
+          until git fetch upstream main; do
+            if [ "$n" -ge 3 ]; then exit 1; fi
+            echo "fetch interrompu ($n/3), nouvel essai."
+            sleep $((n * 5))
+            n=$((n+1))
+          done
+          echo "sha=$(git rev-parse --short=7 upstream/main)" >> "$GITHUB_OUTPUT"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Une branche par version de l'amont : jamais de push forcé. Si elle
+      # existe déjà, la proposition est déjà faite.
       - name: Préparer la branche de mise à jour
-        if: steps.amont.outputs.a_jour == 'false'
-        run: |
-          git config user.name  "kiosque-bot"
-          git config user.email "kiosque-bot@users.noreply.github.com"
-          git checkout -B maj-plateforme
-
-          # `-X ours` protège votre contenu : en cas de collision, c'est TOUJOURS
-          # votre version qui gagne. Un journal ne doit jamais perdre un article
-          # à cause d'une mise à jour d'outillage.
-          if ! git merge upstream/main -X ours -m "Mise à jour de la plateforme Le Kiosque"; then
-            echo "::warning::Conflit non résolu automatiquement — la PR listera les fichiers concernés."
-            git merge --abort || true
-            git merge upstream/main --no-commit --no-ff || true
-            git status --short > .conflits.txt || true
-          fi
-          git push --force origin maj-plateforme
-
-      - name: Ouvrir la pull request
-        if: steps.amont.outputs.a_jour == 'false'
+        id: branche
         env:
           GH_TOKEN: ${{ github.token }}
+          SHA: ${{ steps.amont.outputs.sha }}
         run: |
-          gh pr create \
-            --base main --head maj-plateforme \
-            --title "Mise à jour de la plateforme Le Kiosque" \
-            --body "$(cat <<'TXT'
-Des améliorations sont disponibles en amont (corrections, accessibilité, sécurité).
+          set -euo pipefail
+          branche="maj-plateforme-$SHA"
+          echo "nom=$branche" >> "$GITHUB_OUTPUT"
+          code=1
+          for n in 1 2 3; do
+            set +e
+            git ls-remote --exit-code origin "refs/heads/$branche" >/dev/null
+            code=$?
+            set -e
+            if [ "$code" -eq 0 ] || [ "$code" -eq 2 ]; then break; fi
+            echo "git ls-remote interrompu ($n/3)." >&2
+            sleep $((n * 5))
+          done
+          if [ "$code" -eq 0 ]; then
+            echo "change=false" >> "$GITHUB_OUTPUT"; echo "Déjà proposée."; exit 0
+          fi
+          if [ "$code" -ne 2 ]; then echo "git ls-remote a échoué ($code)." >&2; exit 1; fi
+          git checkout -b "$branche"
+          # Le script de l'amont, pas une copie locale peut-être ancienne.
+          git show upstream/main:tools/maj-plateforme.sh > /tmp/maj-plateforme.sh
+          bash /tmp/maj-plateforme.sh upstream/main
+          if git diff --cached --quiet; then echo "Déjà à jour — rien à proposer."; exit 0; fi
+          git config user.name  "kiosque-bot"
+          git config user.email "kiosque-bot@users.noreply.github.com"
+          git commit -qm "Mise à jour de la plateforme Le Kiosque ($SHA)"
+          n=1
+          until git push origin "$branche"; do
+            if [ "$n" -ge 3 ]; then exit 1; fi
+            echo "push interrompu ($n/3), nouvel essai."
+            sleep $((n * 5))
+            n=$((n+1))
+          done
 
-**Avant de merger**
-1. Vérifiez que les tests passent ci-dessous.
-2. Regardez l'aperçu du site produit.
-3. Si quelque chose vous déplaît : fermez simplement cette PR. Rien ne casse.
-
-Votre contenu (`content/`, `media/`, `theme/tokens.css`, `kiosque.config.ts`)
-n'est jamais modifié par cette mise à jour.
-
-_Proposition automatique — aucune obligation de l'accepter._
-TXT
-)" 2>/dev/null || echo "Une PR est déjà ouverte."
+      - name: Proposer la mise à jour
+        if: steps.branche.outputs.change == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BRANCHE: ${{ steps.branche.outputs.nom }}
+          WORKFLOWS: ${{ steps.branche.outputs.workflows }}
+        run: |
+          set -euo pipefail
+          printf '%s\n' \
+            "Des améliorations sont disponibles en amont (corrections, accessibilité, sécurité)." \
+            "" \
+            "**Comment faire**" \
+            "1. Fusionnez, puis regardez l’onglet Actions : « Publier le journal » doit passer au vert. Sinon, bouton « Revert » de la pull request." \
+            "2. Si quelque chose vous déplaît : fermez simplement la proposition. Rien ne casse." \
+            "" \
+            "Votre contenu (content/, media/, theme/, kiosque.config.ts) n'est jamais modifié par cette mise à jour." \
+            "" \
+            "_Proposition automatique — aucune obligation de l'accepter._" > corps.md
+          if [ -n "${WORKFLOWS// /}" ]; then
+            printf '\n%s\n%s\n' "**À faire à la main** : GitHub interdit à un workflow de modifier un workflow. Ces fichiers ont changé chez Le Kiosque ; recopiez-les depuis https://github.com/azdak919/le-kiosque/tree/main/.github/workflows :" "$WORKFLOWS" >> corps.md
+          fi
+          bash tools/proposer-maj.sh "$BRANCHE" "Mise à jour de la plateforme Le Kiosque" corps.md

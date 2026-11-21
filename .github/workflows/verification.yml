@@ -8,50 +8,45 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages-${{ github.ref }}
+  group: verification-${{ github.ref }}
   cancel-in-progress: true
 
 # Check requis pour merger dans main (branch protection / ruleset) :
 # le job s’appelle « test » — ne pas le renommer sans mettre à jour
 # VisualCode/GIT-AND-TEST-SAFETY.md §9 et la protection GitHub.
+#
+# Ce dépôt est un journal. La vérification exécute les tests ; elle ne
+# publie pas. « Publier le journal » est le seul déploiement : publier ici
+# la vitrine du Kiosque écraserait le site du journal.
 jobs:
   test:
     name: test
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
-      - run: npm test
-      # Un dépôt créé avec « Use this template » porte un autre nom : on prend
-      # le sous-chemin que GitHub Pages annonce, sans rien configurer.
-      - if: github.event_name != 'pull_request'
-        id: pages
-        uses: actions/configure-pages@v6
-      - name: Construire le site
-        env:
-          EVENT: ${{ github.event_name }}
-          PAGES_BASE: ${{ steps.pages.outputs.base_path }}
+      - name: Installer les dépendances
         run: |
-          if [ "$EVENT" != pull_request ]; then export BASE="$PAGES_BASE"; fi
-          npm run site
-      - if: github.event_name != 'pull_request'
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: dist
+          set -euo pipefail
+          n=1
+          until npm ci; do
+            if [ "$n" -ge 3 ]; then exit 1; fi
+            echo "npm ci interrompu ($n/3), nouvel essai."
+            sleep $((n * 5))
+            n=$((n+1))
+          done
+      - run: npm test
 
-  # Navigateur après le build : n’empêche plus la publication Pages si un
-  # sélecteur admin dérive (la vitrine statique est déjà validée par test).
   navigateur:
     name: navigateur
     runs-on: ubuntu-24.04
+    timeout-minutes: 40
     needs: test
     steps:
       - uses: actions/checkout@v7
@@ -59,7 +54,16 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
+      - name: Installer les dépendances
+        run: |
+          set -euo pipefail
+          n=1
+          until npm ci; do
+            if [ "$n" -ge 3 ]; then exit 1; fi
+            echo "npm ci interrompu ($n/3), nouvel essai."
+            sleep $((n * 5))
+            n=$((n+1))
+          done
       - name: Cache Playwright Chromium
         uses: actions/cache@v6
         id: playwright-cache
@@ -68,7 +72,15 @@ jobs:
           key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       - name: Install Chromium
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install chromium
+        run: |
+          set -euo pipefail
+          n=1
+          until npx playwright install chromium; do
+            if [ "$n" -ge 3 ]; then exit 1; fi
+            echo "Installation de Chromium interrompue ($n/3), nouvel essai."
+            sleep $((n * 5))
+            n=$((n+1))
+          done
       - run: BASE=/autre-nom npm run site && npx playwright test
       - if: failure()
         uses: actions/upload-artifact@v7
@@ -78,16 +90,3 @@ jobs:
             playwright-report/
             test-results/
           if-no-files-found: ignore
-
-  publier:
-    name: publier
-    if: github.event_name != 'pull_request'
-    needs: test
-    runs-on: ubuntu-24.04
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Déployer GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
