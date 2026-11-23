@@ -90,9 +90,44 @@ test('build n’importe ni un adaptateur ni le serveur du socle ; le gabarit res
   const serveur = K.kiosqueConfigTs(K.completer({
     name: 'La Gazette', institution: 'Cégep du Nord', accent: '#8a1538', sections: 'Actualités', hebergement: 'serveur',
   }));
+  // Sans adresse de socle, le journal reste sur Markdown.
   assert.match(serveur, /adapter: 'markdown'/);
-  assert.match(serveur, /leur serveur, pour le site entier/);
   assert.doesNotMatch(serveur, /adapter: 'socle'/);
+  const avecSocle = K.kiosqueConfigTs(K.completer({
+    name: 'La Gazette', institution: 'Cégep du Nord', sections: 'Actualités', hebergement: 'serveur', socleUrl: 'https://journal.cegep.example/socle/',
+  }));
+  assert.match(avecSocle, /adapter: 'socle', options: \{ baseUrl: "https:\/\/journal\.cegep\.example\/socle" \}/);
+  assert.match(avecSocle, /mode: 'external'/);
+});
+
+test('le configurateur : adresse déduite du dépôt, logo dans l’archive, catégories des sections, vraies vérifications', () => {
+  const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+  const vide = K.completer({ name: 'La Girouette', institution: 'Cégep fictif', sections: 'Campus\nCulture' });
+  assert.equal(vide.demoContent, false);
+  assert.ok(K.aVerifier(vide).length >= 2, 'dépôt et courriel manquants sont signalés');
+  const c = K.completer({
+    name: 'La Girouette', institution: 'Cégep fictif', sections: 'Campus\nCulture', repository: 'azdak919/la-girouette',
+    contact: 'redaction@girouette.example', noindex: true, logo: { src: `data:image/png;base64,${png}` },
+  });
+  assert.equal(c.siteUrl, 'https://azdak919.github.io/la-girouette');
+  assert.deepEqual(K.aVerifier(c), []);
+  const files = K.fichiersKiosque(c);
+  const logo = files.find((f) => f.path === 'media/logo.png');
+  assert.ok(logo?.bytes?.length, 'le logo est un fichier de l’archive');
+  const pub = files.find((f) => f.path === 'content/publication.yml').content;
+  assert.match(pub, /noindex: true/);
+  assert.match(pub, /src: "\/media\/logo\.png"/);
+  assert.match(pub, /contact: "redaction@girouette\.example"/);
+  const tax = files.find((f) => f.path === 'content/taxonomies.yml').content;
+  assert.match(tax, /slug: "campus"/);
+  assert.doesNotMatch(tax, /vie-etudiante|politique/);
+  const json = JSON.parse(files.find((f) => f.path === 'kiosque-config.json').content);
+  assert.equal(json.gouvernance.contact, 'redaction@girouette.example');
+  assert.equal(json.gouvernance.depot, 'https://github.com/azdak919/la-girouette');
+  assert.equal(json.options.noindex, true);
+  const retour = K.importer(json);
+  assert.equal(retour.repository, 'azdak919/la-girouette');
+  assert.equal(retour.noindex, true);
 });
 
 test('la page Mise à jour nomme Socle et Kiosque et n’appelle pas le réseau', () => {
@@ -225,7 +260,7 @@ test('le build démo écrit la page Mise à jour et l’admin y mène', async (t
   const admin = await readFile(path.join(outDir, 'admin/index.html'), 'utf8');
   assert.match(page, /Socle/);
   assert.match(page, /Kiosque/);
-  assert.match(page, /1\.0\.0/);
+  assert.match(page, /data-installed="socle">\d+\.\d+\.\d+</, "la version du socle épinglé est affichée");
   assert.match(page, /Aucune version proposée/);
   assert.match(admin, /href="\/admin\/mise-a-jour\/"/);
   assert.match(admin, /Tableau de bord/);
@@ -239,7 +274,36 @@ test('le build démo écrit la page Mise à jour et l’admin y mène', async (t
 });
 
 test('la mise à jour de plateforme du gabarit vise le vrai dépôt amont', async () => {
-  const workflow = await readFile(path.join(ROOT, 'template/.github/workflows/maj-plateforme.yml'), 'utf8');
+  const workflow = await readFile(path.join(ROOT, '.github/workflows/maj-plateforme.yml'), 'utf8');
   assert.match(workflow, /https:\/\/github\.com\/azdak919\/le-kiosque\.git/);
   assert.doesNotMatch(workflow, /github\.com\/kiosque\/kiosque/);
+});
+
+test('un journal créé depuis le gabarit ne publie que lui-même', async () => {
+  const dir = path.join(ROOT, '.github/workflows');
+  const amont = ['verification.yml', 'veille.yml', 'dependabot-automerge.yml'];
+  const journal = ['publier.yml', 'maj-socle.yml', 'maj-plateforme.yml'];
+  for (const name of amont) {
+    const wf = await readFile(path.join(dir, name), 'utf8');
+    assert.match(wf, /github\.repository == 'azdak919\/le-kiosque'/, `${name} ne tourne que dans le dépôt amont`);
+  }
+  for (const name of journal) {
+    const wf = await readFile(path.join(dir, name), 'utf8');
+    assert.match(wf, /github\.repository != 'azdak919\/le-kiosque'/, `${name} ne tourne que dans un journal`);
+    assert.doesNotMatch(wf, /--force/, `${name} ne pousse jamais de force`);
+  }
+  const plateforme = await readFile(path.join(dir, 'maj-plateforme.yml'), 'utf8');
+  assert.doesNotMatch(plateforme, /git merge upstream/, 'un dépôt « Use this template » ne partage pas d’historique avec l’amont');
+  assert.match(plateforme, /maj-plateforme\.sh/);
+});
+
+test('un journal ne reçoit pas de propositions Dependabot', async () => {
+  const dir = path.join(ROOT, '.github/workflows');
+  const publier = await readFile(path.join(dir, 'publier.yml'), 'utf8');
+  assert.match(publier, /git rm -q \.github\/dependabot\.yml/, 'la première publication retire la configuration');
+  const auto = await readFile(path.join(dir, 'dependabot-automerge.yml'), 'utf8');
+  assert.match(auto, /github\.repository != 'azdak919\/le-kiosque' && github\.event\.workflow_run\.actor\.login == 'dependabot\[bot\]'/);
+  assert.match(auto, /gh pr close "\$pr"/, 'une proposition déjà ouverte est refermée');
+  const plateforme = await readFile(path.join(ROOT, 'tools/maj-plateforme.sh'), 'utf8');
+  assert.match(plateforme, /\|\.github\|/, 'la mise à jour de plateforme ne recopie pas .github/ (ni dependabot.yml)');
 });
